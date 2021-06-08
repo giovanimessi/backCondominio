@@ -17,6 +17,7 @@ class User extends Authenticatable  implements JWTSubject
      *
      * @var array
      */
+    public $timestamps = false;
     protected $fillable = [
         'name',
         'email',
@@ -30,7 +31,7 @@ class User extends Authenticatable  implements JWTSubject
      */
     protected $hidden = [
         'password',
-        'remember_token',
+
     ];
 
     /**
