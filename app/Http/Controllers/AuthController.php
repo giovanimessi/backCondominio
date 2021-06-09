@@ -25,59 +25,47 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(),[
             'name' => 'required',
-            'email' =>'required|unique:users,email',
-            'cpf'=> 'required|digits:11|unique:users,cpf',
-            'password' =>'required',
-            'password_confirm' =>'required|same:password'
+            'email' => 'required|email|unique:users,email',
+            'cpf' => 'required|digits:11|unique:users,cpf',
+            'password' => 'required',
+            'password_confirm' => 'required|same:password'
         ]);
-          if(!$validator->fails()){
 
+        if(!$validator->fails()) {
             $name = $request->input('name');
             $email = $request->input('email');
             $cpf = $request->input('cpf');
             $password = $request->input('password');
 
             $hash = password_hash($password, PASSWORD_DEFAULT);
-
             $newUser = new User();
-            $newUser ->name = $name;
-            $newUser ->email = $email;
-            $newUser ->cpf = $cpf;
-            $newUser ->password = $hash;
-            $newUser ->save;
+            $newUser->name = $name;
+            $newUser->email = $email;
+            $newUser->cpf = $cpf;
+            $newUser->password = $hash;
+            $newUser->save();
 
-               $token = Auth::attempt([
-                   'cpf' => $cpf,
-                   'password' => $password
+            $token = Auth::attempt($cpf,$password);
+            if(!$token) {
+                $array['error'] = 'Ocorreu um erro.';
+                return $array;
+            }
 
-               ]);
+            $array['token'] = $token;
+            $user = auth()->user();
+            $array['user'] = $user;
 
-               if(!$token){
-                   $array['error'] = 'Ocorreu um erro!';
-                   return $array;
+            $properties = Unit::select(['id', 'name'])
+                ->where('id_owner', $user['id'])
+                ->get();
 
-               }
-
-               $array['token'] = $token;
-               $user = auth()->user();
-               $array['user'] = $user;
-
-               $properties = Unit::select([
-                   'id', 'name'
-               ])->where('id', 'name'.$user['id'])->get();
-               $array['user']['properties'] = $properties;
-
-
-          }else{
-              $array['error'] = $validator->errors()->first();
-
-              return $array;
-
-          }
-
-
+            $array['user']['properties'] = $properties;
+        } else {
+            $array['error'] = $validator->errors()->first();
+            return $array;
+        }
 
         return $array;
-
     }
+
 }
